@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Board Game Recommender</title>
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f3f4f6;
+      color: #1f2937;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      color: #3b82f6;
+    }
+    .filters {
+      background: #ffffff;
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    .filter-group {
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+      color: #374151;
+    }
+    select, button, input[type="checkbox"] {
+      font-size: 1rem;
+    }
+    select, button {
+      padding: 0.6rem;
+      border-radius: 0.4rem;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #1f2937;
+      width: 100%;
+      max-width: 400px;
+    }
+    button {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background-color: #2563eb;
+    }
+    .results {
+      margin-top: 2rem;
+    }
+    .game {
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      cursor: pointer;
+    }
+    .game-header {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .thumbnail {
+      border-radius: 0.5rem;
+      height: 120px;
+      object-fit: cover;
+    }
+    .game-info {
+      flex: 1;
+    }
+    .game-info strong {
+      font-size: 1.25rem;
+      color: #3b82f6;
+    }
+    .game-info p {
+      margin: 0.5rem 0 0;
+    }
+    .game-details {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .game.expanded .game-details {
+      display: block;
+    }
+    .game a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .game a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎲 Board Game Recommender</h1>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label for="players">Player Count:</label>
+      <select id="players">
+        <option value="">-- Select --</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Complexity:</label>
+      <label><input type="checkbox" name="complexity" value="light"> Light</label>
+      <label><input type="checkbox" name="complexity" value="medium"> Medium</label>
+      <label><input type="checkbox" name="complexity" value="heavy"> Heavy</label>
+    </div>
+
+    <div class="filter-group">
+      <label for="themes">Themes:</label>
+      <select id="themes" multiple placeholder="Search and select themes..."></select>
+    </div>
+
+    <button onclick="fetchRecommendations()">🔍 Recommend</button>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <script>
+    async function loadThemes() {
+      const res = await fetch('http://localhost:8000/themes');
+      const themes = await res.json();
+      const select = document.getElementById("themes");
+      themes.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        select.appendChild(opt);
+      });
+      new TomSelect("#themes", {
+        plugins: ['remove_button'],
+        maxItems: null,
+        create: false,
+        persist: false
+      });
+    }
+
+    async function fetchRecommendations() {
+      const players = document.getElementById('players').value;
+      const complexities = [...document.querySelectorAll('input[name=complexity]:checked')].map(c => `complexity=${c.value}`).join('&');
+      const themeSelect = document.getElementById('themes');
+      const themes = [...themeSelect.selectedOptions].map(o => `themes=${encodeURIComponent(o.value)}`).join('&');
+      const query = `players=${players}&${complexities}&${themes}`;
+
+      const res = await fetch(`http://localhost:8000/recommend?${query}`);
+      const games = await res.json();
+
+      const results = document.getElementById('results');
+      results.innerHTML = '';
+      if (games.length === 0) {
+        results.innerHTML = '<p>No games found.</p>';
+        return;
+      }
+
+      games.forEach(game => {
+        const div = document.createElement('div');
+        div.className = 'game';
+        div.addEventListener('click', () => {
+          const desc = div.querySelector('.game-description');
+          const link = div.querySelector('.bgg-link');
+
+          if (div.classList.contains('expanded')) {
+            desc.textContent = game.description.slice(0, 250) + '...';
+            link.style.display = 'none';
+            div.classList.remove('expanded');
+          } else {
+            desc.textContent = game.description;
+            link.style.display = 'inline-block';
+            div.classList.add('expanded');
+          }
+        });
+        div.innerHTML = `
+          <div class="game-header">
+          <img class="thumbnail" src="${game.thumbnail}" alt="${game.name}">
+          <div class="game-info">
+            <strong>${game.name}</strong><br>
+            Players: ${game.players.join(', ')}<br>
+            Time: ${game.time} min<br>
+            Complexity: ${game.complexity}<br>
+            <p class="game-description">${game.description.slice(0, 250)}...</p>
+            <a class="bgg-link" href="https://boardgamegeek.com/boardgame/${game.id}" target="_blank" style="display:none;">🔗 View on BGG</a>
+          </div>
+        </div>
+        `;
+        results.appendChild(div);
+      });
+    }
+
+    loadThemes();
+  </script>
+</body>
+</html>

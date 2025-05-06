@@ -1,13 +1,21 @@
-from fastapi import FastAPI, Query
-from typing import List, Optional
-from recommender import get_recommendations
+from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
+from recommender import router as recommender_router
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-@app.get("/recommend")
-def recommend(
-    players: int,
-    complexity: Optional[List[str]] = Query(default=None),
-    themes: Optional[List[str]] = Query(default=None)
-):
-    return get_recommendations(players, complexity, themes)
+# Add this middleware:
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # <-- allow all for dev; restrict in prod
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount API routes
+app.include_router(recommender_router)
+
+# Serve static files (index.html, etc.)
+app.mount("/", StaticFiles(directory="frontend", html=True), name="static")

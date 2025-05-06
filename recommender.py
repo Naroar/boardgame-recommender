@@ -2,7 +2,7 @@
 
 import json, os, time, hashlib, requests, xmltodict
 from typing import List, Optional
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 CACHE_FILE = "cache.json"
 CACHE_TTL = 60 * 60 * 24 * 7  # 7 days
@@ -28,9 +28,20 @@ def normalize_description(desc: str) -> str:
 def filter_results(data, players, complexity, themes):
     result = []
     for g in data:
-        if players not in g["players"]: continue
-        if complexity and g["complexity"] not in complexity: continue
-        if themes and not any(t in g["themes"] for t in themes): continue
+        print(f"Checking {g['name']} → complexity: {g['complexity']}, themes: {g['themes']}")
+        if players not in g["players"]:
+            continue
+
+        if complexity:
+            if g["complexity"].lower() not in [c.lower() for c in complexity]:
+                continue
+
+        if themes:
+            game_themes = [t.lower() for t in g["themes"]]
+            selected_themes = [t.lower() for t in themes]
+            if not any(t in game_themes for t in selected_themes):
+                continue
+
         g["description"] = normalize_description(g.get("description", ""))
         result.append(g)
     return result
@@ -59,5 +70,13 @@ def get_all_themes() -> List[str]:
     return sorted(themes)
 
 @router.get("/recommend")
-def recommend(players: int, complexity: Optional[List[str]] = None, themes: Optional[List[str]] = None):
+def recommend(
+    players: int,
+    complexity: Optional[List[str]] = Query(default=None),
+    themes: Optional[List[str]] = Query(default=None)
+):
+    print("🔍 players:", players)
+    print("🔍 complexity:", complexity)
+    print("🔍 themes:", themes)
     return get_recommendations(players, complexity, themes)
+
