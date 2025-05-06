@@ -64,9 +64,8 @@ def fetch_game_metadata(game_ids: list) -> list:
                     if isinstance(links, dict):
                         links = [links]
 
-                    print(f"{name}: {[l.get('@type') for l in links]}")
-                    
-                    themes = [l["@value"] for l in links if l["@type"] in ["mechanic", "category"]]
+
+                    themes = [l["@value"] for l in links if l["@type"] in ["boardgamemechanic", "boardgamecategory"]]
 
                     results.append({
                         "id": int(item["@id"]),
