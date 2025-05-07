@@ -5,7 +5,7 @@ import xmltodict
 from bs4 import BeautifulSoup
 import json
 
-TOP_N_GAMES = 5000
+TOP_N_GAMES = 100
 GAMES_PER_PAGE = 100
 BGG_BROWSE_URL = "https://boardgamegeek.com/browse/boardgame/page/"
 BGG_THING_API = "https://boardgamegeek.com/xmlapi2/thing"
@@ -61,6 +61,12 @@ def fetch_game_metadata(game_ids: list) -> list:
                     playing_time = int(item["playingtime"]["@value"])
                     weight = float(item["statistics"]["ratings"]["averageweight"]["@value"])
                     links = item.get("link", [])
+                    ratings = item["statistics"]["ratings"]
+
+                    average = float(ratings["average"]["@value"])
+                    bayes = float(ratings["bayesaverage"]["@value"])
+                    users_rated = int(ratings["usersrated"]["@value"])
+
                     if isinstance(links, dict):
                         links = [links]
 
@@ -76,7 +82,12 @@ def fetch_game_metadata(game_ids: list) -> list:
                         "themes": themes,
                         "image": item.get("image"),
                         "thumbnail": item.get("thumbnail"),
-                        "description": item.get("description")
+                        "description": item.get("description"),
+                            "ratings": {
+                                "average": average,
+                                "geek": bayes,
+                                "users": users_rated
+                            }
                     })
                 except Exception as e:
                     print(f"⚠️ Error parsing game item: {e}")
