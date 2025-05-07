@@ -63,9 +63,17 @@ def fetch_game_metadata(game_ids: list) -> list:
                     links = item.get("link", [])
                     ratings = item["statistics"]["ratings"]
 
-                    average = float(ratings["average"]["@value"])
-                    bayes = float(ratings["bayesaverage"]["@value"])
-                    users_rated = int(ratings["usersrated"]["@value"])
+                    try:
+                        average = float(ratings["average"]["@value"])
+                        bayes = float(ratings["bayesaverage"]["@value"])
+                        users_rated = int(ratings["usersrated"]["@value"])
+                        ratings_data = {
+                            "average": average,
+                            "geek": bayes,
+                            "users": users_rated
+                        }
+                    except (KeyError, ValueError, TypeError):
+                        ratings_data = None
 
                     if isinstance(links, dict):
                         links = [links]
@@ -83,11 +91,12 @@ def fetch_game_metadata(game_ids: list) -> list:
                         "image": item.get("image"),
                         "thumbnail": item.get("thumbnail"),
                         "description": item.get("description"),
-                            "ratings": {
-                                "average": average,
-                                "geek": bayes,
-                                "users": users_rated
-                            }
+                        "ratings": ratings_data,
+                        "ratings": {
+                            "average": average,
+                            "geek": bayes,
+                            "users": users_rated
+                        }
                     })
                 except Exception as e:
                     print(f"⚠️ Error parsing game item: {e}")

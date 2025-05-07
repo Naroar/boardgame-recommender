@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,32 +16,41 @@
       background: #f3f4f6;
       color: #1f2937;
     }
+
     h1 {
       text-align: center;
       font-size: 2.5rem;
       margin-bottom: 2rem;
       color: #3b82f6;
     }
+
     .filters {
       background: #ffffff;
       border-radius: 1rem;
       padding: 2rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       margin-bottom: 2rem;
     }
+
     .filter-group {
       margin-bottom: 1.5rem;
     }
+
     label {
       display: block;
       margin-bottom: 0.5rem;
       font-weight: bold;
       color: #374151;
     }
-    select, button, input[type="checkbox"] {
+
+    select,
+    button,
+    input[type="checkbox"] {
       font-size: 1rem;
     }
-    select, button {
+
+    select,
+    button {
       padding: 0.6rem;
       border-radius: 0.4rem;
       border: 1px solid #d1d5db;
@@ -49,6 +59,7 @@
       width: 100%;
       max-width: 400px;
     }
+
     button {
       background-color: #3b82f6;
       color: white;
@@ -56,53 +67,65 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
+
     button:hover {
       background-color: #2563eb;
     }
+
     .results {
       margin-top: 2rem;
     }
+
     .game {
       display: flex;
       flex-direction: column;
       background: #ffffff;
       border-radius: 0.75rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
       padding: 1rem;
       margin-bottom: 1.5rem;
       cursor: pointer;
     }
+
     .game-header {
       display: flex;
       gap: 1rem;
       align-items: flex-start;
     }
+
     .thumbnail {
       border-radius: 0.5rem;
       height: 120px;
       object-fit: cover;
     }
+
     .game-info {
       flex: 1;
     }
+
     .game-info strong {
       font-size: 1.25rem;
       color: #3b82f6;
     }
+
     .game-info p {
       margin: 0.5rem 0 0;
     }
+
     .game-details {
       display: none;
       margin-top: 0.75rem;
     }
+
     .game.expanded .game-details {
       display: block;
     }
+
     .game a {
       color: #2563eb;
       text-decoration: none;
     }
+
     .game a:hover {
       text-decoration: underline;
     }
@@ -139,6 +162,7 @@
     }
   </style>
 </head>
+
 <body>
   <h1>🎲 Board Game Recommender</h1>
 
@@ -184,7 +208,7 @@
       }
     });
   </script>
-  
+
   <script>
     async function loadThemes() {
       const res = await fetch('http://localhost:8000/themes');
@@ -248,11 +272,13 @@
             Complexity: ${game.complexity}<br>
             <p class="game-description">${game.description.slice(0, 250)}...</p>
             <a class="bgg-link" href="https://boardgamegeek.com/boardgame/${game.id}" target="_blank" style="display:none;">🔗 View on BGG</a>
-          </div>
-          <div class="ratings">
-            ⭐ ${game.ratings.average.toFixed(2)}  
-            👥 ${game.ratings.users.toLocaleString()}  
-            🧠 Geek Score: ${game.ratings.geek.toFixed(2)}
+              ${game.ratings ? `
+                <div class="ratings">
+                  ⭐ ${game.ratings.average.toFixed(2)}  
+                  👥 ${game.ratings.users.toLocaleString()}  
+                  🧠 Geek Score: ${game.ratings.geek.toFixed(2)}
+                </div>
+              ` : ''}
           </div>
         </div>
         `;
@@ -263,12 +289,13 @@
     loadThemes();
   </script>
 
-<footer class="donate-footer">
-  <span>Enjoying this tool? Support it 💖</span>
-  <a href="https://www.buymeacoffee.com/yourname" target="_blank">☕ Buy me a coffee</a>
-  <a href="https://ko-fi.com/yourname" target="_blank">🧡 Ko-fi</a>
-  <a href="https://github.com/sponsors/yourgithub" target="_blank">💖 GitHub Sponsors</a>
-  <a href="https://paypal.me/yourpaypal" target="_blank">💸 Donate</a>
-</footer>
+  <footer class="donate-footer">
+    <span>Enjoying this tool? Support it 💖</span>
+    <a href="https://www.buymeacoffee.com/yourname" target="_blank">☕ Buy me a coffee</a>
+    <a href="https://ko-fi.com/yourname" target="_blank">🧡 Ko-fi</a>
+    <a href="https://github.com/sponsors/yourgithub" target="_blank">💖 GitHub Sponsors</a>
+    <a href="https://paypal.me/yourpaypal" target="_blank">💸 Donate</a>
+  </footer>
 </body>
+
 </html>
