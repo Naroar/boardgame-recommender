@@ -160,6 +160,12 @@
     .donate-footer a:hover {
       text-decoration: underline;
     }
+
+    .ratings {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
   </style>
 </head>
 
@@ -190,6 +196,16 @@
     <div class="filter-group">
       <label for="themes">Themes:</label>
       <select id="themes" multiple placeholder="Search and select themes..."></select>
+    </div>
+
+    <div class="filter-group">
+      <label for="sort">Sort By:</label>
+      <select id="sort" onchange="fetchRecommendations()">
+        <option value="geek">Geek Score (default)</option>
+        <option value="average">Average Rating</option>
+        <option value="users">User Count</option>
+        <option value="name">Alphabetical</option>
+      </select>
     </div>
 
     <button onclick="fetchRecommendations()">🔍 Recommend</button>
@@ -245,7 +261,24 @@
         return;
       }
 
-      games.forEach(game => {
+      const sortBy = document.getElementById('sort').value;
+
+      games.sort((a, b) => {
+        if (sortBy === 'geek') {
+          return (b.ratings?.geek ?? 0) - (a.ratings?.geek ?? 0);
+        }
+        if (sortBy === 'average') {
+          return (b.ratings?.average ?? 0) - (a.ratings?.average ?? 0);
+        }
+        if (sortBy === 'users') {
+          return (b.ratings?.users ?? 0) - (a.ratings?.users ?? 0);
+        }
+        if (sortBy === 'name') {
+          return a.name.localeCompare(b.name);
+        }
+        return 0;
+      });
+    games.forEach(game => {
         const div = document.createElement('div');
         div.className = 'game';
         div.addEventListener('click', () => {
@@ -262,25 +295,35 @@
             div.classList.add('expanded');
           }
         });
+
+        console.log(`🎯 ${game.name} ratings:`, game.ratings);
+        
+        const ratings = game.ratings || {};
+        const avg = Number(ratings.average);
+        const geek = Number(ratings.geek);
+        const users = Number(ratings.users);
+
+        const ratingsHTML = !isNaN(avg) || !isNaN(geek) || !isNaN(users)
+          ? `<div class="ratings">
+              ${!isNaN(avg) ? `⭐ ${avg.toFixed(2)}` : ''}
+              ${!isNaN(users) ? ` 👥 ${users.toLocaleString()}` : ''}
+              ${!isNaN(geek) ? ` 🧠 Geek Score: ${geek.toFixed(2)}` : ''}
+            </div>`
+          : '';
+
         div.innerHTML = `
           <div class="game-header">
-          <img class="thumbnail" src="${game.thumbnail}" alt="${game.name}">
-          <div class="game-info">
-            <strong>${game.name}</strong><br>
-            Players: ${game.players.join(', ')}<br>
-            Time: ${game.time} min<br>
-            Complexity: ${game.complexity}<br>
-            <p class="game-description">${game.description.slice(0, 250)}...</p>
-            <a class="bgg-link" href="https://boardgamegeek.com/boardgame/${game.id}" target="_blank" style="display:none;">🔗 View on BGG</a>
-              ${game.ratings ? `
-                <div class="ratings">
-                  ⭐ ${game.ratings.average.toFixed(2)}  
-                  👥 ${game.ratings.users.toLocaleString()}  
-                  🧠 Geek Score: ${game.ratings.geek.toFixed(2)}
-                </div>
-              ` : ''}
+            <img class="thumbnail" src="${game.thumbnail}" alt="${game.name}">
+            <div class="game-info">
+              <strong>${game.name}</strong><br>
+              Players: ${game.players.join(', ')}<br>
+              Time: ${game.time} min<br>
+              Complexity: ${game.complexity}<br>
+              ${ratingsHTML}
+              <p class="game-description">${game.description.slice(0, 250)}...</p>
+              <a class="bgg-link" href="https://boardgamegeek.com/boardgame/${game.id}" target="_blank" style="display:none;">🔗 View on BGG</a>
+            </div>
           </div>
-        </div>
         `;
         results.appendChild(div);
       });
