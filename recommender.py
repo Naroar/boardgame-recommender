@@ -4,6 +4,7 @@ import json, os, time, hashlib, requests, xmltodict
 from typing import List, Optional
 from fastapi import APIRouter, Query
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CACHE_FILE = "cache.json"
 CACHE_TTL = 60 * 60 * 24 * 7  # 7 days
 router = APIRouter()
@@ -53,8 +54,9 @@ def filter_results(data, min_players: int, max_players: int, complexity, themes)
     return result
 
 def get_all_games():
-    if not os.path.exists("boardgames.json"): return []
-    with open("boardgames.json") as f: return json.load(f)
+    file_path = os.path.join(BASE_DIR, "boardgames.json")
+    if not os.path.exists(file_path): return []
+    with open(file_path) as f: return json.load(f)
 
 def get_recommendations(min_players: int, max_players: int, complexity: Optional[List[str]], themes: Optional[List[str]]) -> List[dict]:
     cache = load_cache()

@@ -265,7 +265,7 @@
     }
 
     async function loadPlayerCountOptions() {
-      const res = await fetch('http://localhost:8000/settings');
+      const res = await fetch('/settings');
       const settings = await res.json();
       const counts = settings.player_counts || [];
 
@@ -297,7 +297,7 @@
 
   <script>
     async function loadThemes() {
-      const res = await fetch('http://localhost:8000/themes');
+      const res = await fetch('/themes');
       const themes = await res.json();
       const select = document.getElementById("themes");
       themes.forEach(t => {
@@ -322,7 +322,7 @@
       const themes = [...themeSelect.selectedOptions].map(o => `themes=${encodeURIComponent(o.value)}`).join('&');
       const query = `min_players=${minPlayers}&max_players=${maxPlayers}&${complexities}&${themes}`;
 
-      const res = await fetch(`http://localhost:8000/recommend?${query}`);
+      const res = await fetch(`/recommend?${query}`);
       const games = await res.json();
 
       const results = document.getElementById('results');
