@@ -18,8 +18,10 @@ jobs:
           python-version: '3.11'
       - run: pip install -r requirements.txt
       - run: python update_games.py
+      - run: cat settings.json
       - uses: EndBug/add-and-commit@v9
         with:
           author_name: GitHub Actions
           author_email: actions@github.com
-          message: 'chore: update boardgames.json from GitHub Action'
+          message: 'chore: update boardgames and settings.json from GitHub Action'
+          add: 'boardgames.json settings.json'

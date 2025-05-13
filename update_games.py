@@ -122,3 +122,16 @@ def save_to_file(games: list, path: str):
 ids = scrape_top_game_ids()
 games = fetch_game_metadata(ids)
 save_to_file(games, OUTPUT_FILE)
+
+# Build and save settings.json
+player_counts = set()
+for game in games:
+    for p in game.get("players", []):
+        player_counts.add(p)
+
+settings = {
+    "player_counts": sorted(player_counts)
+}
+
+with open("settings.json", "w", encoding="utf-8") as f:
+    json.dump(settings, f, indent=2)

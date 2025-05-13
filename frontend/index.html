@@ -36,6 +36,27 @@
       margin-bottom: 1.5rem;
     }
 
+    .player-range {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .player-range input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.4rem;
+      font-size: 1rem;
+      background-color: #ffffff;
+      color: #1f2937;
+    }
+
+    .player-range span {
+      font-size: 1rem;
+      color: #6b7280;
+    }
+
     label {
       display: block;
       margin-bottom: 0.5rem;
@@ -172,46 +193,81 @@
 <body>
   <h1>🎲 Board Game Recommender</h1>
 
-  <div class="filters">
-    <div class="filter-group">
-      <label for="players">Player Count:</label>
-      <select id="players">
-        <option value="">-- Select --</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
+  <div class="filter-group">
+    <label for="minPlayers">Player Count Range:</label>
+    <div class="player-range">
+      <select id="minPlayers" onchange="syncPlayerRange()">
+        <option value="">Min</option>
+      </select>
+      <span>to</span>
+      <select id="maxPlayers" onchange="syncPlayerRange()">
+        <option value="">Max</option>
       </select>
     </div>
+  </div>
 
-    <div class="filter-group">
-      <label>Complexity:</label>
-      <label><input type="checkbox" name="complexity" value="light"> Light</label>
-      <label><input type="checkbox" name="complexity" value="medium"> Medium</label>
-      <label><input type="checkbox" name="complexity" value="heavy"> Heavy</label>
-    </div>
+  <div class="filter-group">
+    <label>Complexity:</label>
+    <label><input type="checkbox" name="complexity" value="light"> Light</label>
+    <label><input type="checkbox" name="complexity" value="medium"> Medium</label>
+    <label><input type="checkbox" name="complexity" value="heavy"> Heavy</label>
+  </div>
 
-    <div class="filter-group">
-      <label for="themes">Themes:</label>
-      <select id="themes" multiple placeholder="Search and select themes..."></select>
-    </div>
+  <div class="filter-group">
+    <label for="themes">Themes:</label>
+    <select id="themes" multiple placeholder="Search and select themes..."></select>
+  </div>
 
-    <div class="filter-group">
-      <label for="sort">Sort By:</label>
-      <select id="sort" onchange="fetchRecommendations()">
-        <option value="geek">Geek Score (default)</option>
-        <option value="average">Average Rating</option>
-        <option value="users">User Count</option>
-        <option value="name">Alphabetical</option>
-      </select>
-    </div>
+  <div class="filter-group">
+    <label for="sort">Sort By:</label>
+    <select id="sort" onchange="fetchRecommendations()">
+      <option value="geek">Geek Score (default)</option>
+      <option value="average">Average Rating</option>
+      <option value="users">User Count</option>
+      <option value="name">Alphabetical</option>
+    </select>
+  </div>
 
-    <button onclick="fetchRecommendations()">🔍 Recommend</button>
+  <button onclick="fetchRecommendations()">🔍 Recommend</button>
   </div>
 
   <div class="results" id="results"></div>
+
+  <script>
+    function syncPlayerRange() {
+      const minSel = document.getElementById("minPlayers");
+      const maxSel = document.getElementById("maxPlayers");
+      const min = parseInt(minSel.value);
+      const max = parseInt(maxSel.value);
+
+      if (!isNaN(min) && isNaN(max)) {
+        maxSel.value = min;
+      } else if (!isNaN(max) && isNaN(min)) {
+        minSel.value = max;
+      } else if (!isNaN(min) && !isNaN(max)) {
+        if (min > max) maxSel.value = min;
+        if (max < min) minSel.value = max;
+      }
+    }
+
+    async function loadPlayerCountOptions() {
+      const res = await fetch('http://localhost:8000/settings');
+      const settings = await res.json();
+      const counts = settings.player_counts || [];
+
+      const minSel = document.getElementById("minPlayers");
+      const maxSel = document.getElementById("maxPlayers");
+
+      counts.forEach(count => {
+        const opt1 = document.createElement("option");
+        const opt2 = document.createElement("option");
+        opt1.value = opt1.textContent = count;
+        opt2.value = opt2.textContent = count;
+        minSel.appendChild(opt1);
+        maxSel.appendChild(opt2);
+      });
+    }
+  </script>
 
   <script>
     // Shrink footer on scroll
@@ -245,11 +301,12 @@
     }
 
     async function fetchRecommendations() {
-      const players = document.getElementById('players').value;
+      const minPlayers = document.getElementById('minPlayers').value;
+      const maxPlayers = document.getElementById('maxPlayers').value;
       const complexities = [...document.querySelectorAll('input[name=complexity]:checked')].map(c => `complexity=${c.value}`).join('&');
       const themeSelect = document.getElementById('themes');
       const themes = [...themeSelect.selectedOptions].map(o => `themes=${encodeURIComponent(o.value)}`).join('&');
-      const query = `players=${players}&${complexities}&${themes}`;
+      const query = `min_players=${minPlayers}&max_players=${maxPlayers}&${complexities}&${themes}`;
 
       const res = await fetch(`http://localhost:8000/recommend?${query}`);
       const games = await res.json();
@@ -278,7 +335,7 @@
         }
         return 0;
       });
-    games.forEach(game => {
+      games.forEach(game => {
         const div = document.createElement('div');
         div.className = 'game';
         div.addEventListener('click', () => {
@@ -297,7 +354,7 @@
         });
 
         console.log(`🎯 ${game.name} ratings:`, game.ratings);
-        
+
         const ratings = game.ratings || {};
         const avg = Number(ratings.average);
         const geek = Number(ratings.geek);
@@ -330,6 +387,7 @@
     }
 
     loadThemes();
+    loadPlayerCountOptions();
   </script>
 
   <footer class="donate-footer">

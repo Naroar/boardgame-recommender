@@ -15,8 +15,13 @@ def load_cache():
 def save_cache(cache):
     with open(CACHE_FILE, "w") as f: json.dump(cache, f, indent=2)
 
-def generate_cache_key(players, complexity, themes):
-    key = json.dumps({"players": players, "complexity": sorted(complexity or []), "themes": sorted(themes or [])}, sort_keys=True)
+def generate_cache_key(min_players, max_players, complexity, themes):
+    key = json.dumps({
+        "min_players": min_players,
+        "max_players": max_players,
+        "complexity": sorted(complexity or []),
+        "themes": sorted(themes or [])
+    }, sort_keys=True)
     return hashlib.md5(key.encode()).hexdigest()
 
 def classify_complexity(weight):
@@ -25,12 +30,13 @@ def classify_complexity(weight):
 def normalize_description(desc: str) -> str:
     return desc.replace("\n", " ").replace("&#10;", " ").strip()
 
-def filter_results(data, players, complexity, themes):
+def filter_results(data, min_players: int, max_players: int, complexity, themes):
     result = []
     for g in data:
         print(f"Checking {g['name']} → complexity: {g['complexity']}, themes: {g['themes']}")
-        if players not in g["players"]:
-            continue
+        if min_players and max_players:
+            if not any(p >= min_players and p <= max_players for p in g["players"]):
+                continue
 
         if complexity:
             if g["complexity"].lower() not in [c.lower() for c in complexity]:
@@ -50,13 +56,13 @@ def get_all_games():
     if not os.path.exists("boardgames.json"): return []
     with open("boardgames.json") as f: return json.load(f)
 
-def get_recommendations(players: int, complexity: Optional[List[str]], themes: Optional[List[str]]) -> List[dict]:
+def get_recommendations(min_players: int, max_players: int, complexity: Optional[List[str]], themes: Optional[List[str]]) -> List[dict]:
     cache = load_cache()
-    key = generate_cache_key(players, complexity, themes)
+    key = generate_cache_key(min_players, max_players, complexity, themes)
     if key in cache and time.time() - cache[key]["timestamp"] < CACHE_TTL:
         return cache[key]["results"]
     all_games = get_all_games()
-    results = filter_results(all_games, players, complexity, themes)
+    results = filter_results(all_games, min_players, max_players, complexity, themes)
     cache[key] = {"timestamp": time.time(), "results": results}
     save_cache(cache)
     return results
@@ -71,12 +77,9 @@ def get_all_themes() -> List[str]:
 
 @router.get("/recommend")
 def recommend(
-    players: int,
+    min_players: Optional[int] = Query(default=None),
+    max_players: Optional[int] = Query(default=None),
     complexity: Optional[List[str]] = Query(default=None),
     themes: Optional[List[str]] = Query(default=None)
 ):
-    print("🔍 players:", players)
-    print("🔍 complexity:", complexity)
-    print("🔍 themes:", themes)
-    return get_recommendations(players, complexity, themes)
-
+    return get_recommendations(min_players, max_players, complexity, themes)
