@@ -5,7 +5,7 @@ import xmltodict
 from bs4 import BeautifulSoup
 import json
 
-TOP_N_GAMES = 100
+TOP_N_GAMES = 5000
 GAMES_PER_PAGE = 100
 BGG_BROWSE_URL = "https://boardgamegeek.com/browse/boardgame/page/"
 BGG_THING_API = "https://boardgamegeek.com/xmlapi2/thing"

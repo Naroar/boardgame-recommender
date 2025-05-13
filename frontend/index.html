@@ -237,16 +237,30 @@
     function syncPlayerRange() {
       const minSel = document.getElementById("minPlayers");
       const maxSel = document.getElementById("maxPlayers");
-      const min = parseInt(minSel.value);
-      const max = parseInt(maxSel.value);
 
+      let min = parseInt(minSel.value);
+      let max = parseInt(maxSel.value);
+
+      // Mirror values if only one is set
       if (!isNaN(min) && isNaN(max)) {
         maxSel.value = min;
+        max = min;
       } else if (!isNaN(max) && isNaN(min)) {
         minSel.value = max;
-      } else if (!isNaN(min) && !isNaN(max)) {
-        if (min > max) maxSel.value = min;
-        if (max < min) minSel.value = max;
+        min = max;
+      }
+
+      // If both are set, enforce bounds
+      if (!isNaN(min) && !isNaN(max)) {
+        if (min > max) {
+          // Adjust the field the user just changed
+          const activeElement = document.activeElement;
+          if (activeElement === minSel) {
+            maxSel.value = min;
+          } else if (activeElement === maxSel) {
+            minSel.value = max;
+          }
+        }
       }
     }
 
