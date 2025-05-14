@@ -3,7 +3,7 @@ import requests
 import time
 import xmltodict
 from bs4 import BeautifulSoup
-import json
+import json, os
 
 TOP_N_GAMES = 5000
 GAMES_PER_PAGE = 100
@@ -12,6 +12,8 @@ BGG_THING_API = "https://boardgamegeek.com/xmlapi2/thing"
 CHUNK_SIZE = 20
 API_DELAY = 5
 OUTPUT_FILE = "boardgames.json"
+OUTPUT_DIR = "data"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def scrape_top_game_ids(n=TOP_N_GAMES) -> list:
     ids = set()
@@ -121,7 +123,7 @@ def save_to_file(games: list, path: str):
 # Execute the full pipeline
 ids = scrape_top_game_ids()
 games = fetch_game_metadata(ids)
-save_to_file(games, OUTPUT_FILE)
+save_to_file(games, os.path.join(OUTPUT_DIR,OUTPUT_FILE))
 
 # Build and save settings.json
 player_counts = set()
@@ -133,5 +135,5 @@ settings = {
     "player_counts": sorted(player_counts)
 }
 
-with open("settings.json", "w", encoding="utf-8") as f:
+with open(os.path.join(OUTPUT_DIR, "settings.json"), "w", encoding="utf-8") as f:
     json.dump(settings, f, indent=2)

@@ -24,4 +24,4 @@ jobs:
           author_name: GitHub Actions
           author_email: actions@github.com
           message: 'chore: update boardgames and settings.json from GitHub Action'
-          add: 'boardgames.json settings.json'
+          add: 'data/boardgames.json data/settings.json'
