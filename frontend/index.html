@@ -234,6 +234,20 @@
   <div class="results" id="results"></div>
 
   <script>
+    const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+
+    const API_BASE = isLocalhost
+      ? "http://localhost:8000"
+      : "https://your-api-service.fly.dev"; // Railway/Fly.io/etc
+
+    const DATA_BASE = isLocalhost
+      ? "http://localhost:8000" // or file paths for local testing
+      : "https://raw.githubusercontent.com/Naroar/boardgame-recommender-api/main";
+
+    const THEMES_URL = `${API_BASE}/api/themes`; // Adjusted to match API route
+    const SETTINGS_URL = `${API_BASE}/data/settings`; // Adjusted to match backend endpoint
+    const RECOMMEND_URL = `${API_BASE}/api/recommend?`; // Adjusted to match API route
+
     function syncPlayerRange() {
       const minSel = document.getElementById("minPlayers");
       const maxSel = document.getElementById("maxPlayers");
@@ -265,7 +279,11 @@
     }
 
     async function loadPlayerCountOptions() {
-      const res = await fetch('/settings');
+      const res = await fetch(SETTINGS_URL);
+      if (!res.ok) {
+        console.error('Failed to load settings:', res.statusText);
+        return;
+      }
       const settings = await res.json();
       const counts = settings.player_counts || [];
 
@@ -297,7 +315,11 @@
 
   <script>
     async function loadThemes() {
-      const res = await fetch('/themes');
+      const res = await fetch(THEMES_URL);
+      if (!res.ok) {
+        console.error('Failed to load themes:', res.statusText);
+        return;
+      }
       const themes = await res.json();
       const select = document.getElementById("themes");
       themes.forEach(t => {
@@ -322,7 +344,7 @@
       const themes = [...themeSelect.selectedOptions].map(o => `themes=${encodeURIComponent(o.value)}`).join('&');
       const query = `min_players=${minPlayers}&max_players=${maxPlayers}&${complexities}&${themes}`;
 
-      const res = await fetch(`/recommend?${query}`);
+      const res = await fetch(`${RECOMMEND_URL}${query}`, { method: 'GET' });
       const games = await res.json();
 
       const results = document.getElementById('results');
@@ -387,7 +409,9 @@
             <img class="thumbnail" src="${game.thumbnail}" alt="${game.name}">
             <div class="game-info">
               <strong>${game.name}</strong><br>
-              Players: ${game.players.join(', ')}<br>
+              Players: ${game.players.length > 1 
+                ? `${Math.min(...game.players)} - ${Math.max(...game.players)}`
+                : game.players[0]}<br>
               Time: ${game.time} min<br>
               Complexity: ${game.complexity}<br>
               ${ratingsHTML}
